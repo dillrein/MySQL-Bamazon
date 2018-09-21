@@ -32,9 +32,10 @@ function readProducts() {
     if (err) throw err;
     // Log all results of the SELECT statement
     for (var i = 0; i < res.length; i++) {
-      console.log("Product: " + res[i].product_name + '\n for $' + (res[i].price) + " per item\n")
-      buy();
+      console.log("Product: " + res[i].product_name + '\n for $' + (res[i].price) + " per item. \nIn stock: " + res[i].stock_quantity + "\n")
+
     }
+    buy();
   });
 }
 
@@ -43,11 +44,11 @@ function readProducts() {
 //how many units to buy
 function buy() {
   inquirer
-    .prompt(
+    .prompt([
       {
         name: "item",
         type: "input",
-        message: "Enter item ID of product you like to buy:",
+        message: "Enter item name of product you like to buy:",
       },
       {
         name: "quantity",
@@ -61,24 +62,41 @@ function buy() {
         }
 
       }
-    )
+    ])
     .then(function (answer) {
+      console.log("Test")
       var userItem = answer.item;
       var userAmount = answer.quantity;
 
       connection.query("SELECT * FROM products", function (err, res) {
-        for (var i = 0; i < res.length; i++){
-          if(res[i].product_name === userItem && res[i].stock_quantity > userAmount){
-            var amount = userAmount * res[i].price
-            console.log("You purchased " + userAmount + " for " + amount)
+        for (var i = 0; i < res.length; i++) {
+          if (res[i].product_name === userItem && res[i].stock_quantity >= userAmount) {
 
+            var amount = userAmount * res[i].price
+            console.log("You purchased " + userAmount + " of " + userItem + " for $" + amount)
+            
+            var newStock = res[i].stock_quantity - userAmount
+            connection.query(
+              "UPDATE products SET ? WHERE ?",
+              [
+                {
+                  stock_quantity: newStock
+                },
+                {
+                  product_name: userItem
+                }
+              ],
+            )
+          } else {
+            console.log("Incorrect item name or desired amount to high");
           }
         }
-      })
-      
-    });
-}
-//check if there is enough quantity to take out. if not return a message and stop transaction.
+      });
 
-//if there is enough;. Update sql to reflect remaining.
-//show total cost of purchase
+
+    })
+    .then(function(){
+      console.log("rerun start")
+      //readProducts();
+    })
+}
