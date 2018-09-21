@@ -31,9 +31,9 @@ function readProducts() {
   connection.query("SELECT * FROM products", function (err, res) {
     if (err) throw err;
     // Log all results of the SELECT statement
-    for(var i = 0; i < res.length; i ++){
-      console.log("Product: "+res[i].product_name + '\n for $'+(res[i].price)+" per item\n")
-     buy();
+    for (var i = 0; i < res.length; i++) {
+      console.log("Product: " + res[i].product_name + '\n for $' + (res[i].price) + " per item\n")
+      buy();
     }
   });
 }
@@ -43,22 +43,39 @@ function readProducts() {
 //how many units to buy
 function buy() {
   inquirer
-    .prompt({
-      name: "item",
-      type: "input",
-      message: "Enter item ID of product you like to buy:",
-    },
+    .prompt(
+      {
+        name: "item",
+        type: "input",
+        message: "Enter item ID of product you like to buy:",
+      },
       {
         name: "quantity",
         type: "input",
-        message: "How many do you want to buy?"
-
-      })
-    .then(function (answer) {
-      connection.query("SELECT stock_quantity FROM products ")
-      if (answer.) {
+        message: "How many do you want to buy?",
+        validate: function (value) {
+          if (isNaN(value) === false) {
+            return true;
+          }
+          return false;
+        }
 
       }
+    )
+    .then(function (answer) {
+      var userItem = answer.item;
+      var userAmount = answer.quantity;
+
+      connection.query("SELECT * FROM products", function (err, res) {
+        for (var i = 0; i < res.length; i++){
+          if(res[i].product_name === userItem && res[i].stock_quantity > userAmount){
+            var amount = userAmount * res[i].price
+            console.log("You purchased " + userAmount + " for " + amount)
+
+          }
+        }
+      })
+      
     });
 }
 //check if there is enough quantity to take out. if not return a message and stop transaction.
